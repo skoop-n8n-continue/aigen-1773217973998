@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Architecture Diagram</title>
+    <link rel="stylesheet" href="styles.css?v=a1b2c3">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h2 class="title">## Architecture</h2>
+        </header>
+        <main>
+            <div class="diagram">
+                <div class="workflow-section">
+                    <div class="label">n8n workflow</div>
+                    <div class="flow-line-container">
+                        <div class="horizontal-connector-long">
+                            <span class="step-text">└─ HTTP Request POST /run</span>
+                            <div class="line"></div>
+                            <span class="arrow">►</span>
+                            <span class="component">initiator Lambda (30s)</span>
+                        </div>
+
+                        <div class="vertical-context">
+                            <div class="v-line"></div>
+                            <div class="side-note">creates DynamoDB job</div>
+                        </div>
+
+                        <div class="horizontal-connector-long reverse">
+                            <span class="step-text">◄── 202 { jobId, statusUrl }</span>
+                            <div class="line"></div>
+                            <span class="component">invokes worker async</span>
+                        </div>
+
+                        <div class="vertical-context">
+                            <div class="v-line"></div>
+                        </div>
+
+                        <div class="wait-node">
+                            <span class="step-text">n8n Wait node (waits up to 20 min for callback)</span>
+                            <span class="down-arrow">▼</span>
+                        </div>
+
+                        <div class="worker-section">
+                            <div class="worker-header">worker Lambda (900s)</div>
+                            <ul class="worker-tasks">
+                                <li>clones GitHub repo</li>
+                                <li>runs agent (cn or claude)</li>
+                                <li>git add / commit / push</li>
+                                <li>uploads files to S3</li>
+                                <li>marks job "completed"</li>
+                            </ul>
+                        </div>
+
+                        <div class="horizontal-connector-long reverse callback">
+                            <span class="step-text">└─ ◄── POST callback_url { response, ... }</span>
+                            <div class="line"></div>
+                        </div>
+
+                        <div class="final-flow">
+                            <div class="down-arrow-large">▼</div>
+                            <div class="db-call">
+                                <span class="component">DynamoDB</span>
+                                <span class="arrow-left">◄───</span>
+                                <span class="step-text">GET /status/{jobId}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="script.js?v=a1b2c3"></script>
+</body>
+</html>
